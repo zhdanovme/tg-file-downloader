@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tg-downloader/schemas/configuration.json",
+  "title": "Configuration",
+  "description": "Configuration file schema for Telegram file downloader",
+  "type": "object",
+  "properties": {
+    "groups": {
+      "type": "object",
+      "description": "Group filtering configuration",
+      "properties": {
+        "include": {
+          "type": "array",
+          "description": "Group handles to include (if specified, only these groups are processed)",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]+$"
+          },
+          "uniqueItems": true
+        },
+        "exclude": {
+          "type": "array",
+          "description": "Group handles to exclude",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_]+$"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "object",
+      "description": "File filtering configuration",
+      "properties": {
+        "include": {
+          "type": "array",
+          "description": "File patterns to include (glob patterns)",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "exclude": {
+          "type": "array",
+          "description": "File patterns to exclude (glob patterns)",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "download": {
+      "type": "object",
+      "description": "Download settings",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Download destination directory path",
+          "minLength": 1
+        },
+        "parallelism": {
+          "type": "integer",
+          "description": "Number of concurrent downloads",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "additionalProperties": false
+    },
+    "session": {
+      "type": "object",
+      "description": "Session storage settings",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Session storage directory path",
+          "minLength": 1
+        },
+        "encrypt": {
+          "type": "boolean",
+          "description": "Whether to encrypt session file"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "default": {
+    "groups": {
+      "include": [],
+      "exclude": []
+    },
+    "files": {
+      "include": [],
+      "exclude": []
+    },
+    "download": {
+      "path": "./data/downloads",
+      "parallelism": 1
+    },
+    "session": {
+      "path": "./data/session",
+      "encrypt": true
+    }
+  }
+}

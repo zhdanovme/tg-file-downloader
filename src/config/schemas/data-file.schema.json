@@ -1,0 +1,242 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tg-downloader/schemas/data-file.json",
+  "title": "DataFile",
+  "description": "Data file schema containing discovered groups and files",
+  "type": "object",
+  "required": ["version", "createdAt", "lastUpdatedAt", "groups", "files", "statistics"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version (semver format)",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "createdAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of first creation",
+      "format": "date-time"
+    },
+    "lastUpdatedAt": {
+      "type": "string",
+      "description": "ISO 8601 timestamp of last update",
+      "format": "date-time"
+    },
+    "groups": {
+      "type": "array",
+      "description": "All discovered Telegram groups",
+      "items": {
+        "$ref": "#/definitions/TelegramGroup"
+      }
+    },
+    "files": {
+      "type": "array",
+      "description": "All discovered files",
+      "items": {
+        "$ref": "#/definitions/FileEntry"
+      }
+    },
+    "statistics": {
+      "$ref": "#/definitions/Statistics"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "TelegramGroup": {
+      "type": "object",
+      "required": ["id", "name", "type", "accessHash", "discoveredAt"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Telegram's unique group ID",
+          "minLength": 1
+        },
+        "handle": {
+          "type": "string",
+          "description": "Username/handle (e.g., 'mygroup' for @mygroup)",
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the group",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of group",
+          "enum": ["group", "channel", "supergroup"]
+        },
+        "memberCount": {
+          "type": "integer",
+          "description": "Number of members",
+          "minimum": 0
+        },
+        "accessHash": {
+          "type": "string",
+          "description": "Telegram access hash for API calls",
+          "minLength": 1
+        },
+        "discoveredAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp of discovery",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FileEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "groupId",
+        "name",
+        "size",
+        "telegramFileId",
+        "messageId",
+        "discoveredAt",
+        "downloadStatus"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier (format: groupId:messageId)",
+          "pattern": "^.+:.+$"
+        },
+        "groupId": {
+          "type": "string",
+          "description": "Reference to parent TelegramGroup.id",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "description": "File name",
+          "minLength": 1
+        },
+        "size": {
+          "type": "integer",
+          "description": "File size in bytes",
+          "minimum": 0
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "MIME type"
+        },
+        "extension": {
+          "type": "string",
+          "description": "File extension (with leading dot)",
+          "pattern": "^\\..+$"
+        },
+        "telegramFileId": {
+          "type": "string",
+          "description": "Telegram's file ID for download",
+          "minLength": 1
+        },
+        "messageId": {
+          "type": "integer",
+          "description": "Message ID containing the file",
+          "minimum": 1
+        },
+        "uploadedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when file was uploaded to Telegram",
+          "format": "date-time"
+        },
+        "discoveredAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when we discovered this file",
+          "format": "date-time"
+        },
+        "downloadStatus": {
+          "type": "string",
+          "description": "Current download state",
+          "enum": ["pending", "in-progress", "completed", "failed"]
+        },
+        "downloadedAt": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when download completed",
+          "format": "date-time"
+        },
+        "downloadPath": {
+          "type": "string",
+          "description": "Local path where file was saved"
+        },
+        "errorMessage": {
+          "type": "string",
+          "description": "Error message if download failed"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "downloadStatus": { "const": "completed" }
+            }
+          },
+          "then": {
+            "required": ["downloadedAt", "downloadPath"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "downloadStatus": { "const": "failed" }
+            }
+          },
+          "then": {
+            "required": ["errorMessage"]
+          }
+        }
+      ]
+    },
+    "Statistics": {
+      "type": "object",
+      "required": [
+        "totalGroups",
+        "totalFiles",
+        "totalSize",
+        "pendingFiles",
+        "completedFiles",
+        "failedFiles",
+        "totalDownloadedSize"
+      ],
+      "properties": {
+        "totalGroups": {
+          "type": "integer",
+          "description": "Total number of groups",
+          "minimum": 0
+        },
+        "totalFiles": {
+          "type": "integer",
+          "description": "Total number of files",
+          "minimum": 0
+        },
+        "totalSize": {
+          "type": "integer",
+          "description": "Total size of all files in bytes",
+          "minimum": 0
+        },
+        "pendingFiles": {
+          "type": "integer",
+          "description": "Files not yet downloaded",
+          "minimum": 0
+        },
+        "completedFiles": {
+          "type": "integer",
+          "description": "Files successfully downloaded",
+          "minimum": 0
+        },
+        "failedFiles": {
+          "type": "integer",
+          "description": "Files that failed to download",
+          "minimum": 0
+        },
+        "totalDownloadedSize": {
+          "type": "integer",
+          "description": "Total size of downloaded files in bytes",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
